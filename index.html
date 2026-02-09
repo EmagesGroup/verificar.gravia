@@ -2,50 +2,41 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Certificados | GRAVIA</title>
+<title>Verificación de Certificados | GRAVIA</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
-  font-family: "Segoe UI", Arial, sans-serif;
+  font-family:"Segoe UI", Arial, sans-serif;
   background:#f4f6f8;
   margin:0;
 }
 
 .box{
-  max-width:720px;
+  max-width:760px;
   margin:50px auto;
-  background:#ffffff;
-  padding:35px;
-  border-radius:10px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-}
-
-/* LOGO */
-.logo{
+  background:#fff;
+  padding:40px;
+  border-radius:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,.08);
   text-align:center;
-  margin-bottom:15px;
 }
 
 .logo img{
-  max-width:160px;
-  height:auto;
+  max-width:110px;
+  margin-bottom:15px;
 }
 
-/* TITULOS */
 h1{
-  text-align:center;
   color:#0a3d62;
   margin-bottom:5px;
 }
 
 .sub{
-  text-align:center;
   color:#555;
   margin-bottom:25px;
 }
 
-/* INPUT Y BOTON */
 input,button{
   width:100%;
   padding:14px;
@@ -66,41 +57,47 @@ button{
   font-weight:bold;
 }
 
-button:hover{
-  background:#062f4f;
-}
+button:hover{background:#062f4f;}
 
-/* PARTICIPANTE */
 .participante{
   margin-top:25px;
-  padding:15px;
+  padding:18px;
   background:#eef4fa;
-  border-radius:6px;
-  font-size:15px;
+  border-radius:8px;
+  text-align:left;
 }
 
-/* CERTIFICADOS */
 .cert{
   margin-top:18px;
   padding:18px;
   background:#f9fafc;
   border-left:5px solid #0a3d62;
-  border-radius:6px;
+  border-radius:8px;
+  text-align:left;
 }
 
 .cert h3{
-  margin:0 0 10px 0;
+  margin:0 0 10px;
   color:#0a3d62;
 }
 
-.cert .grid{
+.grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:6px 20px;
   font-size:14px;
 }
 
-/* BOTON DESCARGA */
+.sello{
+  margin-top:15px;
+  padding:12px;
+  background:#eafaf1;
+  border:1px solid #2ecc71;
+  border-radius:6px;
+  color:#1e8449;
+  font-size:14px;
+}
+
 a.btn{
   display:inline-block;
   margin-top:12px;
@@ -112,11 +109,6 @@ a.btn{
   font-size:14px;
 }
 
-a.btn:hover{
-  background:#062f4f;
-}
-
-/* MENSAJES */
 .msg{
   margin-top:20px;
   color:#c0392b;
@@ -128,23 +120,18 @@ a.btn:hover{
 <body>
 
 <div class="box">
-
-  <!-- LOGO -->
   <div class="logo">
     <img src="logo-gravia.png" alt="GRAVIA">
   </div>
 
-  <!-- TITULO -->
   <h1>Certificados GRAVIA</h1>
-  <p class="sub">Plataforma de verificación de certificados</p>
+  <div class="sub">Plataforma oficial de verificación</div>
 
-  <!-- BUSCADOR -->
-  <input id="dni" placeholder="Ingrese su DNI">
-  <button onclick="buscar()">Buscar certificados</button>
+  <input id="dni" placeholder="Ingrese DNI (opcional)">
+  <input id="codigo" placeholder="Ingrese código de certificado (opcional)">
+  <button onclick="buscar()">Verificar certificado</button>
 
-  <!-- RESULTADOS -->
   <div id="resultado"></div>
-
 </div>
 
 <script>
@@ -152,11 +139,12 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSmV-ladv2Gu74q
 
 async function buscar(){
   const dni = document.getElementById("dni").value.trim();
+  const codigo = document.getElementById("codigo").value.trim();
   const out = document.getElementById("resultado");
   out.innerHTML = "";
 
-  if(!dni){
-    out.innerHTML = "<div class='msg'>Ingrese un DNI válido.</div>";
+  if(!dni && !codigo){
+    out.innerHTML = "<div class='msg'>Ingrese DNI o código de certificado.</div>";
     return;
   }
 
@@ -167,27 +155,24 @@ async function buscar(){
   let encontrados = [];
 
   filas.forEach(fila=>{
-    const c = fila.split(",").map(x=>x.replace(/"/g,"").trim());
-    if(c[0] === dni){
+    const c = fila.split(",").map(x=>x.replace(/\"/g,"").trim());
+    if((dni && c[0]===dni) || (codigo && c[1]===codigo)){
       encontrados.push(c);
     }
   });
 
-  if(encontrados.length === 0){
-    out.innerHTML = "<div class='msg'>No se encontraron certificados para este DNI.</div>";
+  if(encontrados.length===0){
+    out.innerHTML="<div class='msg'>No se encontró información válida.</div>";
     return;
   }
 
-  // CABECERA PARTICIPANTE
   out.innerHTML = `
     <div class="participante">
       <strong>Participante:</strong> ${encontrados[0][5]} ${encontrados[0][4]}<br>
-      <strong>DNI:</strong> ${dni}<br>
-      <strong>Certificados encontrados:</strong> ${encontrados.length}
+      <strong>Certificados válidos encontrados:</strong> ${encontrados.length}
     </div>
   `;
 
-  // LISTADO CERTIFICADOS
   encontrados.forEach(c=>{
     out.innerHTML += `
       <div class="cert">
@@ -198,6 +183,13 @@ async function buscar(){
           <div><strong>Modalidad:</strong> ${c[7]}</div>
           <div><strong>Fecha:</strong> ${c[8]}</div>
         </div>
+
+        <div class="sello">
+          ✅ <strong>Certificado válido</strong><br>
+          Verificado en verificar.gravia.emagesgroup.com<br>
+          Fecha de verificación: ${new Date().toLocaleDateString()}
+        </div>
+
         <a class="btn" href="${c[10]}" target="_blank">⬇ Descargar certificado</a>
       </div>
     `;
